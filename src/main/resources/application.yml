@@ -1,0 +1,49 @@
+logging:
+  level:
+    org.springframework.security: DEBUG
+
+spring:
+  profiles:
+    active: default
+  datasource:
+    url: jdbc:h2:file:./database.db
+    username: sa
+    password:
+    driverClassName: org.h2.Driver
+    initialization-mode: always
+  jackson:
+    mapper:
+      DEFAULT_VIEW_INCLUSION: true
+  jpa:
+    generate-ddl: true
+    ddl:
+      ddl-auto: create
+    properties:
+      hibernate:
+        show_sql: false
+        use_sql_comments: true
+        format_sql: true
+
+server:
+  port: '8088'
+  servlet:
+    context-path: /api
+  error:
+    include-stacktrace: "never"
+
+management:
+  endpoints:
+    enabled-by-default: false
+    web:
+      base-path: "/"
+  endpoint:
+    health:
+      enabled: true
+
+merlot-domain: "marketplace.dev.merlot-education.eu"
+
+cors:
+  global:
+    origins:
+    patterns: >
+      http://localhost:[*]
