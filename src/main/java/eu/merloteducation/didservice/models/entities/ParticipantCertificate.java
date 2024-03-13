@@ -13,8 +13,8 @@ import java.util.UUID;
 @NoArgsConstructor
 public class ParticipantCertificate {
     @Id
-    @GeneratedValue
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column(unique = true)
     private String did;
