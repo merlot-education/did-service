@@ -1,0 +1,9 @@
+cors:
+  global:
+    origins: >
+      https://marketplace.demo.merlot-education.eu,
+      https://api.demo.merlot-education.eu,
+      https://cif.demo.merlot-education.eu
+    patterns:
+
+merlot-domain: "marketplace.demo.merlot-education.eu"
