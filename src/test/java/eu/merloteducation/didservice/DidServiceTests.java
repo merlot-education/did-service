@@ -5,6 +5,9 @@ import eu.merloteducation.didservice.models.dtos.ParticipantDidPrivateKeyDto;
 import eu.merloteducation.didservice.models.entities.ParticipantCertificate;
 import eu.merloteducation.didservice.repositories.ParticipantCertificateRepository;
 import eu.merloteducation.didservice.service.DidServiceImpl;
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -16,8 +19,17 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
+import java.security.PrivateKey;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -44,9 +56,9 @@ public class DidServiceTests {
     }
 
     @Test
-    void generateDidAndPrivateKeyCorrectly() {
+    void generateDidAndPrivateKeyCorrectly() throws IOException, CertificateException {
 
-        String didRegex = "did:web:" + merlotDomain.replace(".", "\\.") + "#[-A-Za-z0-9]*";
+        String didRegex = "did:web:" + merlotDomain + "#[-A-Za-z0-9]*";
 
         ParticipantDidPrivateKeyCreateRequest request = new ParticipantDidPrivateKeyCreateRequest();
         request.setIssuer("foo");
@@ -56,18 +68,24 @@ public class DidServiceTests {
 
         assertTrue(dto.getDid().matches(didRegex));
 
-        String privateKey = dto.getPrivateKey();
-        assertTrue(privateKey.startsWith("-----BEGIN PRIVATE KEY-----"));
-        assertTrue(privateKey.endsWith("-----END PRIVATE KEY-----\n"));
+        String privateKeyString = dto.getPrivateKey();
+        assertTrue(privateKeyString.startsWith("-----BEGIN PRIVATE KEY-----"));
+        assertTrue(privateKeyString.endsWith("-----END PRIVATE KEY-----\n"));
+
+        PrivateKey privateKey = convertToPrivateKey(privateKeyString);
+        assertNotNull(privateKey);
 
         verify(certificateRepository).save(certificateArgumentCaptor.capture());
         ParticipantCertificate cert = certificateArgumentCaptor.getValue();
 
         assertTrue(cert.getDid().matches(didRegex));
 
-        String certificate = cert.getCertificate();
-        assertTrue(certificate.startsWith("-----BEGIN CERTIFICATE-----"));
-        assertTrue(certificate.endsWith("-----END CERTIFICATE-----\n"));
+        String certificateString = cert.getCertificate();
+        assertTrue(certificateString.startsWith("-----BEGIN CERTIFICATE-----"));
+        assertTrue(certificateString.endsWith("-----END CERTIFICATE-----\n"));
+
+        List<X509Certificate> certificates = convertToCertficates(certificateString);
+        assertEquals(1, certificates.size());
     }
 
     @Test
@@ -84,5 +102,20 @@ public class DidServiceTests {
     @Test
     void getDidDocumentCorrectly() {
 
+    }
+
+    private PrivateKey convertToPrivateKey(String prk) throws IOException {
+
+        PEMParser pemParser = new PEMParser(new StringReader(prk));
+        JcaPEMKeyConverter converter = new JcaPEMKeyConverter();
+        PrivateKeyInfo privateKeyInfo = PrivateKeyInfo.getInstance(pemParser.readObject());
+        return converter.getPrivateKey(privateKeyInfo);
+    }
+
+    private List<X509Certificate> convertToCertficates(String certs) throws CertificateException {
+
+        ByteArrayInputStream certStream = new ByteArrayInputStream(certs.getBytes(StandardCharsets.UTF_8));
+        CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
+        return (List<X509Certificate>) certFactory.generateCertificates(certStream);
     }
 }

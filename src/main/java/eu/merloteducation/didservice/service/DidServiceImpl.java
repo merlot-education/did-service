@@ -1,5 +1,10 @@
 package eu.merloteducation.didservice.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import eu.merloteducation.didservice.models.did.Did;
+import eu.merloteducation.didservice.models.did.PublicJwk;
+import eu.merloteducation.didservice.models.did.VerificationMethod;
 import eu.merloteducation.didservice.models.dtos.ParticipantDidPrivateKeyCreateRequest;
 import eu.merloteducation.didservice.models.dtos.ParticipantDidPrivateKeyDto;
 import eu.merloteducation.didservice.models.entities.ParticipantCertificate;
@@ -22,20 +27,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayInputStream;
 import java.io.StringWriter;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.UUID;
+import java.security.interfaces.RSAPublicKey;
+import java.util.*;
 
 @Service
 public class DidServiceImpl implements DidService {
-    private static final String CERTIFICATE_ALGORITHM = "RSA";
+    private static final String ALGORITHM = "RSA";
 
-    private static final int CERTIFICATE_BITS = 4096;
+    private static final int KEY_SIZE = 4096;
 
     private final Logger logger = LoggerFactory.getLogger(DidService.class);
 
@@ -54,7 +61,9 @@ public class DidServiceImpl implements DidService {
     @Override
     public String getDidDocument() {
 
-        return "DID document";
+        List<ParticipantCertificate> certificates = certificateRepository.findAll();
+
+        return createDidDocument(merlotDomain, certificates);
     }
 
     /**
@@ -77,6 +86,8 @@ public class DidServiceImpl implements DidService {
         X500Name subjectName = new X500Name("CN=" + request.getSubject());
 
         keyPair = createKeyPair();
+
+        assert keyPair != null;
         cert = createCertificate(issuerName, subjectName, keyPair);
 
         storeDidAndCertificate(did, cert);
@@ -95,14 +106,14 @@ public class DidServiceImpl implements DidService {
         KeyPairGenerator keyPairGenerator = null;
 
         try {
-            keyPairGenerator = KeyPairGenerator.getInstance(CERTIFICATE_ALGORITHM);
+            keyPairGenerator = KeyPairGenerator.getInstance(ALGORITHM);
+            keyPairGenerator.initialize(KEY_SIZE, new SecureRandom());
+            return keyPairGenerator.generateKeyPair();
         } catch (NoSuchAlgorithmException e) {
             logger.error(e.getMessage(), e);
         }
 
-        assert keyPairGenerator != null;
-        keyPairGenerator.initialize(CERTIFICATE_BITS, new SecureRandom());
-        return keyPairGenerator.generateKeyPair();
+        return null;
     }
 
     private X509Certificate createCertificate(X500Name issuerName, X500Name subjectName, KeyPair keyPair) {
@@ -164,7 +175,8 @@ public class DidServiceImpl implements DidService {
         certificateRepository.save(cert);
     }
 
-    private String convertCertificateToPemString(X509Certificate certificate){
+    private String convertCertificateToPemString(X509Certificate certificate) {
+
         try {
             StringWriter sw = new StringWriter();
             JcaPEMWriter pemWriter = new JcaPEMWriter(sw);
@@ -173,11 +185,12 @@ public class DidServiceImpl implements DidService {
             return sw.toString();
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
-            return null;
         }
+        return null;
     }
 
     private String convertPrivateKeyToPemString(PrivateKey privateKey) {
+
         try {
             StringWriter sw = new StringWriter();
             PemWriter pemWriter = new PemWriter(sw);
@@ -186,15 +199,83 @@ public class DidServiceImpl implements DidService {
             return sw.toString();
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
-            return null;
         }
+        return null;
     }
 
-    private ParticipantDidPrivateKeyDto createParticipantDidPrivateKeyDto(String did, PrivateKey privateKey){
+    private ParticipantDidPrivateKeyDto createParticipantDidPrivateKeyDto(String did, PrivateKey privateKey) {
+
         ParticipantDidPrivateKeyDto dto = new ParticipantDidPrivateKeyDto();
         dto.setDid(did);
         dto.setPrivateKey(convertPrivateKeyToPemString(privateKey));
 
         return dto;
+    }
+
+    private String createDidDocument(String baseDomain, List<ParticipantCertificate> certificates) {
+
+        String didWeb = "did:web:" + baseDomain;
+
+        Did didDocument = new Did();
+        didDocument.setContext(List.of("https://www.w3.org/ns/did/v1", "https://w3id.org/security/suites/jws-2020/v1"));
+        didDocument.setId(didWeb);
+        didDocument.setVerificationMethod(new ArrayList<>());
+        didDocument.setAssertionMethod(new ArrayList<>());
+
+        String vmContext = "https://w3c-ccg.github.io/lds-jws2020/contexts/v1/";
+        String type = "JsonWebKey2020";
+
+        for (ParticipantCertificate certificateItem : certificates){
+            VerificationMethod vm = new VerificationMethod();
+            vm.setContext(List.of(vmContext));
+            vm.setId(certificateItem.getDid());
+            vm.setType(type);
+            vm.setController(didWeb);
+
+            List<X509Certificate> certificateList = null;
+            try {
+                certificateList = convertToCertficates(certificateItem.getCertificate());
+            }catch (CertificateException e) {
+                logger.error(e.getMessage(), e);
+            }
+
+            assert certificateList != null;
+            X509Certificate certificate = certificateList.stream().findFirst().orElse(null);
+
+            assert certificate != null;
+
+            RSAPublicKey rsaPublicKey = (RSAPublicKey) certificate.getPublicKey();
+            String e = Base64.getUrlEncoder().encodeToString(rsaPublicKey.getPublicExponent().toByteArray());
+            String n = Base64.getUrlEncoder().encodeToString(rsaPublicKey.getModulus().toByteArray());
+
+            PublicJwk publicKeyJwk = new PublicJwk();
+            publicKeyJwk.setKty("RSA");
+            publicKeyJwk.setN(n);
+            publicKeyJwk.setE(e);
+            publicKeyJwk.setAlg("RS256");
+            publicKeyJwk.setX5u("https://" + baseDomain + "/.well-known/" + certificateItem.getDid() + ".pem");
+
+            vm.setPublicKeyJwk(publicKeyJwk);
+
+            didDocument.getVerificationMethod().add(vm);
+            didDocument.getAssertionMethod().add(certificateItem.getDid());
+        }
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        // Convert the DID object to JSON string
+        String didDocumentString = null;
+        try {
+            didDocumentString = objectMapper.writeValueAsString(didDocument);
+        } catch (JsonProcessingException e) {
+            logger.error(e.getMessage(), e);
+        }
+        return didDocumentString;
+    }
+
+    private List<X509Certificate> convertToCertficates(String certs) throws CertificateException {
+
+        ByteArrayInputStream certStream = new ByteArrayInputStream(certs.getBytes(StandardCharsets.UTF_8));
+        CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
+        return (List<X509Certificate>) certFactory.generateCertificates(certStream);
     }
 }
