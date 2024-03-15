@@ -9,11 +9,10 @@ import java.util.List;
 
 @Getter
 @Setter
-@JsonPropertyOrder({"@context", "id", "verificationMethod", "assertionMethod"})
-public class Did {
+@JsonPropertyOrder({"@context", "id", "verificationMethod"})
+public class DidDocument {
     @JsonProperty("@context")
     private List<String> context;
     private String id;
     private List<VerificationMethod> verificationMethod;
-    private List<String> assertionMethod;
 }
