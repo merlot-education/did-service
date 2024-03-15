@@ -1,6 +1,5 @@
 package eu.merloteducation.didservice.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import eu.merloteducation.didservice.models.dtos.ParticipantDidPrivateKeyCreateRequest;
 import eu.merloteducation.didservice.models.dtos.ParticipantDidPrivateKeyDto;
 import eu.merloteducation.didservice.service.DidService;
@@ -12,8 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.security.cert.CertificateException;
-
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 
 @RestController
@@ -23,10 +20,11 @@ public class DidController {
     private DidService didService;
 
     /**
-     * POST endpoint for generating a did:web, a key pair and certificate. Returns the did:web and private key.
+     * POST endpoint for generating a did:web, a key pair and a certificate. Returns the did:web, the verification
+     * method and the associated private key.
      *
      * @param request with information needed for certificate generation
-     * @return dto containing the generated did:web and private key
+     * @return dto containing the generated did:web, the verification method and the associated private key
      */
     @PostMapping("/generateDidAndPrivateKey")
     public ParticipantDidPrivateKeyDto generateDidAndPrivateKey(
@@ -35,7 +33,8 @@ public class DidController {
         try {
             return didService.generateDidAndPrivateKey(request);
         } catch (Exception e) {
-            throw new ResponseStatusException(INTERNAL_SERVER_ERROR, "Failed to generate did:web / key pair / certificate");
+            throw new ResponseStatusException(INTERNAL_SERVER_ERROR,
+                "Failed to generate did:web / key pair / certificate");
         }
     }
 
@@ -46,8 +45,7 @@ public class DidController {
      * @return DID document
      */
     @GetMapping(value = "/participant/{id}/did.json", produces = "application/json")
-    public ResponseEntity<String> getDidDocument(@PathVariable(value = "id") String id)
-       {
+    public ResponseEntity<String> getDidDocument(@PathVariable(value = "id") String id) {
 
         String didDocument = null;
         try {

@@ -87,10 +87,11 @@ public class DidServiceImpl implements DidService {
     }
 
     /**
-     * Generates a did:web, a key pair and certificate. Returns the did:web and private key and saves the certificate.
+     * Generates a did:web, a key pair and a corresponding certificate. Returns the did:web, the verification method as
+     * well as the associated private key and stores the certificate.
      *
      * @param request with information needed for certificate generation
-     * @return dto containing the generated did:web and private key
+     * @return dto containing the generated did:web, the verification method and the associated private key
      */
     @Override
     public ParticipantDidPrivateKeyDto generateDidAndPrivateKey(ParticipantDidPrivateKeyCreateRequest request)
