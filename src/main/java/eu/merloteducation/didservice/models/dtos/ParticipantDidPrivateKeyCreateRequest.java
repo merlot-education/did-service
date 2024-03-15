@@ -8,8 +8,5 @@ import lombok.Setter;
 @Setter
 public class ParticipantDidPrivateKeyCreateRequest {
     @NotNull
-    private String issuer;
-
-    @NotNull
     private String subject;
 }

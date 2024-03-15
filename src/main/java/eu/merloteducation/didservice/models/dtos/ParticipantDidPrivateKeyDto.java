@@ -7,6 +7,6 @@ import lombok.Setter;
 @Setter
 public class ParticipantDidPrivateKeyDto {
     private String did;
-
+    private String verificationMethod;
     private String privateKey;
 }

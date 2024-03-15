@@ -45,6 +45,8 @@ public class DidServiceImpl implements DidService {
 
     private static final int KEY_SIZE = 4096;
 
+    private static final String VM_TYPE_ID = "#JWK2020";
+
     private final Logger logger = LoggerFactory.getLogger(DidService.class);
 
     @Autowired
@@ -52,6 +54,9 @@ public class DidServiceImpl implements DidService {
 
     @Value("${merlot-domain}")
     private String merlotDomain;
+
+    @Value("${certificate-issuer}")
+    private String certificateIssuer;
 
     @Override
     public String getCertificate(String id) throws Exception {
@@ -94,11 +99,11 @@ public class DidServiceImpl implements DidService {
         X509Certificate cert = null;
         KeyPair keyPair = null;
 
-        String didWeb = generateDidWeb();
+        String didWeb = generateDidWeb(request.getSubject());
 
         // The list of Relative Distinguished Names (RDN) forms the Distinguished Name (DN) of an issuer or a subject.
         // Common Name (CN) is currently the only RDN used here. Organization (O) and Country (C) could be added to the minimal list of RDNs.
-        X500Name issuerName = new X500Name("CN=" + request.getIssuer());
+        X500Name issuerName = new X500Name("CN=" + certificateIssuer);
         X500Name subjectName = new X500Name("CN=" + request.getSubject());
 
         keyPair = createKeyPair();
@@ -107,9 +112,9 @@ public class DidServiceImpl implements DidService {
         return createParticipantDidPrivateKeyDto(didWeb, keyPair.getPrivate());
     }
 
-    private String generateDidWeb() {
+    private String generateDidWeb(String seed) {
 
-        String uuid = UUID.randomUUID().toString();
+        String uuid = UUID.nameUUIDFromBytes(seed.getBytes(StandardCharsets.UTF_8)).toString();
         return getDidWeb(uuid);
     }
 
@@ -221,6 +226,7 @@ public class DidServiceImpl implements DidService {
 
         ParticipantDidPrivateKeyDto dto = new ParticipantDidPrivateKeyDto();
         dto.setDid(did);
+        dto.setVerificationMethod(did + VM_TYPE_ID);
         dto.setPrivateKey(convertPrivateKeyToPemString(privateKey));
 
         return dto;
@@ -238,11 +244,10 @@ public class DidServiceImpl implements DidService {
 
         String vmContext = "https://w3c-ccg.github.io/lds-jws2020/contexts/v1/";
         String type = "JsonWebKey2020";
-        String typeIdentifier = "#JWK2020";
 
         VerificationMethod vm = new VerificationMethod();
         vm.setContext(List.of(vmContext));
-        vm.setId(didWeb + typeIdentifier);
+        vm.setId(didWeb + VM_TYPE_ID);
         vm.setType(type);
         vm.setController(didWeb);
 

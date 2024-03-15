@@ -43,6 +43,9 @@ public class DidDocumentServiceTests {
     @Value("${merlot-domain}")
     private String merlotDomain;
 
+    @Value("${certificate-issuer}")
+    private String certificateIssuer;
+
     @Autowired
     private DidServiceImpl didService;
 
@@ -64,8 +67,7 @@ public class DidDocumentServiceTests {
         String didRegex = "did:web:" + merlotDomain + ":participant:[-A-Za-z0-9]*";
 
         ParticipantDidPrivateKeyCreateRequest request = new ParticipantDidPrivateKeyCreateRequest();
-        request.setIssuer("foo");
-        request.setSubject("bar");
+        request.setSubject("ABC Company");
 
         ParticipantDidPrivateKeyDto dto = didService.generateDidAndPrivateKey(request);
 
@@ -89,6 +91,11 @@ public class DidDocumentServiceTests {
 
         List<X509Certificate> certificates = convertPemStringToCertificates(certificateString);
         assertEquals(1, certificates.size());
+
+        X509Certificate certificate = certificates.stream().findFirst().orElse(null);
+        assertNotNull(certificate);
+        assertEquals("CN=" + certificateIssuer, certificate.getIssuerX500Principal().getName());
+        assertEquals("CN=ABC Company", certificate.getSubjectX500Principal().getName());
     }
 
     @Test

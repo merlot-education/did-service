@@ -49,3 +49,5 @@ cors:
     origins:
     patterns: >
       http://localhost:[*]
+
+certificate-issuer: "MERLOT Federation"
