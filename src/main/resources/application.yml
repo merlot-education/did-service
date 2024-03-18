@@ -27,11 +27,19 @@ spring:
         format_sql: true
 
 server:
-  port: '8088'
+  port: 8443
   servlet:
     context-path: /api
   error:
     include-stacktrace: "never"
+  ssl:
+    key-store: classpath:keystore.p12
+    key-store-password: "example"
+    key-store-type: PKCS12
+    key-alias: tomcat
+    enabled: true
+  http:
+    port: 8088
 
 management:
   endpoints:
