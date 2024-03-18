@@ -52,6 +52,9 @@ public class DidServiceImpl implements DidService {
     @Autowired
     private ParticipantCertificateRepository certificateRepository;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @Value("${did-domain}")
     private String didDomain;
 
@@ -276,9 +279,8 @@ public class DidServiceImpl implements DidService {
 
         didDocument.getVerificationMethod().add(vm);
 
-        ObjectMapper objectMapper = new ObjectMapper();
         // Convert the DID object to JSON string
-        String didDocumentString = null;
+        String didDocumentString;
         try {
             didDocumentString = objectMapper.writeValueAsString(didDocument);
         } catch (JsonProcessingException ex) {
