@@ -7,3 +7,9 @@ cors:
     patterns:
 
 merlot-domain: "marketplace.demo.merlot-education.eu"
+
+server:
+  ssl:
+    enabled: false # will be set by cluster
+  http:
+    port: 0
