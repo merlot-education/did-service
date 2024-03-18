@@ -265,7 +265,7 @@ public class DidServiceImpl implements DidService {
         publicKeyJwk.setKty("RSA");
         publicKeyJwk.setN(n);
         publicKeyJwk.setE(e);
-        publicKeyJwk.setAlg("RS256");
+        publicKeyJwk.setAlg("PS256");
 
         String didWebBase = didWeb
                 .replace("did:web:", "") // remove did type prefix

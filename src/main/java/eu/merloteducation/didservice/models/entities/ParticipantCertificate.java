@@ -1,6 +1,7 @@
 package eu.merloteducation.didservice.models.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,8 +16,10 @@ public class ParticipantCertificate {
     private Long id;
 
     @Column(unique = true)
+    @NotNull
     private String did;
 
-    @Column(length = 2048)
+    @Lob
+    @NotNull
     private String certificate;
 }
