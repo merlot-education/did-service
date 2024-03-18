@@ -264,7 +264,12 @@ public class DidServiceImpl implements DidService {
         publicKeyJwk.setE(e);
         publicKeyJwk.setAlg("RS256");
 
-        String certificateUrl = "https://" + didWeb.replace("did:web", "").replace(":", "/") + "/cert.pem";
+        String didWebBase = didWeb
+                .replace("did:web:", "") // remove did type prefix
+                .replaceFirst("#.*", ""); // remove verification method reference
+        String certificateUrl = getDidDocumentUri(didWebBase)
+                .replace("did.json", "cert.pem");
+
         publicKeyJwk.setX5u(certificateUrl);
 
         vm.setPublicKeyJwk(publicKeyJwk);
@@ -282,6 +287,33 @@ public class DidServiceImpl implements DidService {
         }
 
         return didDocumentString;
+    }
+
+    /**
+     * Given the domain part of the did:web, return the resulting URI.
+     * See <a href="https://w3c-ccg.github.io/did-method-web/#read-resolve">did-web specification</a> for reference.
+     *
+     * @param didWeb did:web without prefix and key reference
+     * @return did web URI
+     */
+    private static String getDidDocumentUri(String didWeb) {
+        boolean containsSubpath = didWeb.contains(":");
+        StringBuilder didDocumentUriBuilder = new StringBuilder();
+        didDocumentUriBuilder.append(didWeb
+                .replace(":", "/") // Replace ":" with "/" in the method specific identifier to
+                // obtain the fully qualified domain name and optional path.
+                .replace("%3A", ":")); // If the domain contains a port percent decode the colon.
+
+        // Generate an HTTPS URL to the expected location of the DID document by prepending https://.
+        didDocumentUriBuilder.insert(0, "https://");
+        if (!containsSubpath) {
+            // If no path has been specified in the URL, append /.well-known.
+            didDocumentUriBuilder.append("/.well-known");
+        }
+        // Append /did.json to complete the URL.
+        didDocumentUriBuilder.append("/did.json");
+
+        return didDocumentUriBuilder.toString();
     }
 
     @SuppressWarnings("unchecked")
