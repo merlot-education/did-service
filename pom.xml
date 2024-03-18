@@ -17,6 +17,20 @@
 		<java.version>17</java.version>
 		<org.projectlombok.version>1.18.28</org.projectlombok.version>
 	</properties>
+	<repositories>
+		<repository>
+			<id>central</id>
+			<url>https://repo1.maven.org/maven2</url>
+		</repository>
+		<repository>
+			<id>github</id>
+			<name>GitHub MERLOT Education</name>
+			<url>https://maven.pkg.github.com/merlot-education/*</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -55,6 +69,12 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>eu.merloteducation.modelslib</groupId>
+			<artifactId>modelslib</artifactId>
+			<version>0.3.13</version>
 		</dependency>
 	</dependencies>
 

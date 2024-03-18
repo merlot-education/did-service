@@ -2,11 +2,11 @@ package eu.merloteducation.didservice;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.merloteducation.didservice.models.did.DidDocument;
-import eu.merloteducation.didservice.models.dtos.ParticipantDidPrivateKeyCreateRequest;
-import eu.merloteducation.didservice.models.dtos.ParticipantDidPrivateKeyDto;
 import eu.merloteducation.didservice.models.entities.ParticipantCertificate;
 import eu.merloteducation.didservice.repositories.ParticipantCertificateRepository;
 import eu.merloteducation.didservice.service.DidServiceImpl;
+import eu.merloteducation.modelslib.api.did.ParticipantDidPrivateKeyCreateRequest;
+import eu.merloteducation.modelslib.api.did.ParticipantDidPrivateKeyDto;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
@@ -39,7 +39,7 @@ import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @EnableConfigurationProperties
-public class DidDocumentServiceTests {
+public class DidServiceTests {
     @Value("${did-domain}")
     private String didDomain;
 

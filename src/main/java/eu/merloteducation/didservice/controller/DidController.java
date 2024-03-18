@@ -1,8 +1,9 @@
 package eu.merloteducation.didservice.controller;
 
-import eu.merloteducation.didservice.models.dtos.ParticipantDidPrivateKeyCreateRequest;
-import eu.merloteducation.didservice.models.dtos.ParticipantDidPrivateKeyDto;
+import eu.merloteducation.didservice.models.exceptions.*;
 import eu.merloteducation.didservice.service.DidService;
+import eu.merloteducation.modelslib.api.did.ParticipantDidPrivateKeyCreateRequest;
+import eu.merloteducation.modelslib.api.did.ParticipantDidPrivateKeyDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -11,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+import static org.springframework.http.HttpStatus.*;
 
 @RestController
 @RequestMapping("/")
@@ -32,9 +33,13 @@ public class DidController {
 
         try {
             return didService.generateDidAndPrivateKey(request);
-        } catch (Exception e) {
+        } catch (CryptographicAssetGenerationException e1) {
             throw new ResponseStatusException(INTERNAL_SERVER_ERROR,
-                "Failed to generate did:web / key pair / certificate");
+                "Cryptographic asset creation failed: " + e1.getMessage());
+        } catch (PemConversionException e2) {
+            throw new ResponseStatusException(INTERNAL_SERVER_ERROR, e2.getMessage());
+        } catch (RequestArgumentException e3) {
+            throw new ResponseStatusException(BAD_REQUEST, e3.getMessage());
         }
     }
 
@@ -50,8 +55,11 @@ public class DidController {
         String didDocument = null;
         try {
             didDocument = didService.getDidDocument(id);
-        } catch (Exception e) {
-            throw new ResponseStatusException(INTERNAL_SERVER_ERROR, "Failed to provide did document");
+        } catch (ParticipantNotFoundException e1) {
+            throw new ResponseStatusException(NOT_FOUND, e1.getMessage());
+        } catch (DidDocumentGenerationException e2) {
+            throw new ResponseStatusException(INTERNAL_SERVER_ERROR,
+                "Did document provision failed: " + e2.getMessage());
         }
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
@@ -72,8 +80,8 @@ public class DidController {
 
         try {
             certificate = didService.getCertificate(id);
-        } catch (Exception e) {
-            throw new ResponseStatusException(INTERNAL_SERVER_ERROR, e.getMessage());
+        } catch (ParticipantNotFoundException e) {
+            throw new ResponseStatusException(NOT_FOUND, e.getMessage());
         }
 
         HttpHeaders headers = new HttpHeaders();

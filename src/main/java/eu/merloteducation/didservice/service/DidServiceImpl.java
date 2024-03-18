@@ -5,10 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.merloteducation.didservice.models.did.DidDocument;
 import eu.merloteducation.didservice.models.did.PublicJwk;
 import eu.merloteducation.didservice.models.did.VerificationMethod;
-import eu.merloteducation.didservice.models.dtos.ParticipantDidPrivateKeyCreateRequest;
-import eu.merloteducation.didservice.models.dtos.ParticipantDidPrivateKeyDto;
 import eu.merloteducation.didservice.models.entities.ParticipantCertificate;
+import eu.merloteducation.didservice.models.exceptions.*;
 import eu.merloteducation.didservice.repositories.ParticipantCertificateRepository;
+import eu.merloteducation.modelslib.api.did.ParticipantDidPrivateKeyCreateRequest;
+import eu.merloteducation.modelslib.api.did.ParticipantDidPrivateKeyDto;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.BasicConstraints;
@@ -62,31 +63,39 @@ public class DidServiceImpl implements DidService {
     private String certificateIssuer;
 
     @Override
-    public String getCertificate(String id) throws Exception {
+    public String getCertificate(String id) throws ParticipantNotFoundException {
 
         String didWeb = getDidWeb(id);
 
         ParticipantCertificate participantCertificate = certificateRepository.findByDid(didWeb);
 
         if (participantCertificate == null) {
-            throw new Exception("Participant could not be found.");
+            throw new ParticipantNotFoundException("Participant could not be found.");
         }
 
         return participantCertificate.getCertificate();
     }
 
     @Override
-    public String getDidDocument(String id) throws Exception {
+    public String getDidDocument(String id) throws ParticipantNotFoundException, DidDocumentGenerationException {
 
         String didWeb = getDidWeb(id);
 
         ParticipantCertificate participantCertificate = certificateRepository.findByDid(didWeb);
 
         if (participantCertificate == null) {
-            throw new Exception("Participant could not be found.");
+            throw new ParticipantNotFoundException("Participant could not be found.");
         }
 
-        return createDidDocument(participantCertificate);
+        String didDocumentString = null;
+
+        try {
+            didDocumentString = createDidDocument(participantCertificate);
+        } catch (Exception e) {
+            throw new DidDocumentGenerationException(e.getMessage());
+        }
+
+        return didDocumentString;
     }
 
     /**
@@ -98,20 +107,36 @@ public class DidServiceImpl implements DidService {
      */
     @Override
     public ParticipantDidPrivateKeyDto generateDidAndPrivateKey(ParticipantDidPrivateKeyCreateRequest request)
-        throws Exception {
+        throws CryptographicAssetGenerationException, PemConversionException, RequestArgumentException {
 
         X509Certificate cert = null;
         KeyPair keyPair = null;
 
-        String didWeb = generateDidWeb(request.getSubject());
+        String certificateSubject = request.getSubject();
+
+        if (certificateSubject == null || certificateSubject.isBlank()) {
+            throw new RequestArgumentException("Missing or empty subject name.");
+        }
+
+        String didWeb = generateDidWeb(certificateSubject);
 
         // The list of Relative Distinguished Names (RDN) forms the Distinguished Name (DN) of an issuer or a subject.
         // Common Name (CN) is currently the only RDN used here. Organization (O) and Country (C) could be added to the minimal list of RDNs.
         X500Name issuerName = new X500Name("CN=" + certificateIssuer);
-        X500Name subjectName = new X500Name("CN=" + request.getSubject());
+        X500Name subjectName = new X500Name("CN=" + certificateSubject);
 
-        keyPair = createKeyPair();
-        cert = createCertificate(issuerName, subjectName, keyPair);
+        try {
+            keyPair = createKeyPair();
+        } catch (Exception e) {
+            throw new CryptographicAssetGenerationException("Key pair generation failed: " + e.getMessage());
+        }
+
+        try {
+            cert = createCertificate(issuerName, subjectName, keyPair);
+        } catch (Exception e) {
+            throw new CryptographicAssetGenerationException("Certificate generation failed: " + e.getMessage());
+        }
+
         storeDidAndCertificate(didWeb, cert);
         return createParticipantDidPrivateKeyDto(didWeb, keyPair.getPrivate());
     }
@@ -153,12 +178,7 @@ public class DidServiceImpl implements DidService {
 
         Date endDate = calendar.getTime();
 
-        try {
-            contentSigner = new JcaContentSignerBuilder(signatureAlgorithm).build(keyPair.getPrivate());
-        } catch (OperatorCreationException e) {
-            logger.error(e.getMessage(), e);
-            throw e;
-        }
+        contentSigner = new JcaContentSignerBuilder(signatureAlgorithm).build(keyPair.getPrivate());
 
         JcaX509v3CertificateBuilder certBuilder = new JcaX509v3CertificateBuilder(issuerName, certSerialNumber,
             startDate, endDate, subjectName, keyPair.getPublic());
@@ -168,27 +188,19 @@ public class DidServiceImpl implements DidService {
         // A CA is allowed to sign other certificates.
         // An End Entity is e.g., a user or a server.
         BasicConstraints basicConstraints = new BasicConstraints(true); // <-- true for CA, false for EndEntity
-        try {
-            certBuilder.addExtension(new ASN1ObjectIdentifier("2.5.29.19"), true,
-                basicConstraints); // Basic Constraints is usually marked as critical.
-        } catch (CertIOException e) {
-            logger.error(e.getMessage(), e);
-            throw e;
-        }
+
+        certBuilder.addExtension(new ASN1ObjectIdentifier("2.5.29.19"), true,
+            basicConstraints); // Basic Constraints is usually marked as critical.
+
         // -------------------------------------
 
-        try {
-            cert = new JcaX509CertificateConverter().setProvider(Security.getProvider("BC"))
-                .getCertificate(certBuilder.build(contentSigner));
-        } catch (CertificateException e) {
-            logger.error(e.getMessage(), e);
-            throw e;
-        }
+        cert = new JcaX509CertificateConverter().setProvider(Security.getProvider("BC"))
+            .getCertificate(certBuilder.build(contentSigner));
 
         return cert;
     }
 
-    private void storeDidAndCertificate(String did, X509Certificate certificate) throws IOException {
+    private void storeDidAndCertificate(String did, X509Certificate certificate) throws PemConversionException {
 
         ParticipantCertificate cert = new ParticipantCertificate();
         cert.setDid(did);
@@ -197,36 +209,34 @@ public class DidServiceImpl implements DidService {
         certificateRepository.save(cert);
     }
 
-    private String convertCertificateToPemString(X509Certificate certificate) throws IOException {
+    private String convertCertificateToPemString(X509Certificate certificate) throws PemConversionException {
 
+        StringWriter sw = new StringWriter();
+        JcaPEMWriter pemWriter = new JcaPEMWriter(sw);
         try {
-            StringWriter sw = new StringWriter();
-            JcaPEMWriter pemWriter = new JcaPEMWriter(sw);
             pemWriter.writeObject(certificate);
             pemWriter.close();
-            return sw.toString();
         } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-            throw e;
+            throw new PemConversionException("Certificate conversion failed: " + e.getMessage());
         }
+        return sw.toString();
     }
 
-    private String convertPrivateKeyToPemString(PrivateKey privateKey) throws IOException {
+    private String convertPrivateKeyToPemString(PrivateKey privateKey) throws PemConversionException {
 
+        StringWriter sw = new StringWriter();
+        PemWriter pemWriter = new PemWriter(sw);
         try {
-            StringWriter sw = new StringWriter();
-            PemWriter pemWriter = new PemWriter(sw);
             pemWriter.writeObject(new PemObject("PRIVATE KEY", privateKey.getEncoded()));
             pemWriter.close();
-            return sw.toString();
         } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-            throw e;
+            throw new PemConversionException("Private key conversion failed: " + e.getMessage());
         }
+        return sw.toString();
     }
 
     private ParticipantDidPrivateKeyDto createParticipantDidPrivateKeyDto(String did, PrivateKey privateKey)
-        throws IOException {
+        throws PemConversionException {
 
         ParticipantDidPrivateKeyDto dto = new ParticipantDidPrivateKeyDto();
         dto.setDid(did);
@@ -237,7 +247,7 @@ public class DidServiceImpl implements DidService {
     }
 
     private String createDidDocument(ParticipantCertificate participantCertificate)
-        throws CertificateException, JsonProcessingException {
+        throws JsonProcessingException, PemConversionException {
 
         String didWeb = participantCertificate.getDid();
 
@@ -255,7 +265,12 @@ public class DidServiceImpl implements DidService {
         vm.setType(type);
         vm.setController(didWeb);
 
-        X509Certificate x509Certificate = convertPemStringToCertificate(participantCertificate.getCertificate());
+        X509Certificate x509Certificate = null;
+        try {
+            x509Certificate = convertPemStringToCertificate(participantCertificate.getCertificate());
+        } catch (CertificateException e) {
+            throw new PemConversionException("Certificate conversion failed: " + e.getMessage());
+        }
 
         RSAPublicKey rsaPublicKey = (RSAPublicKey) x509Certificate.getPublicKey();
         String e = Base64.getUrlEncoder().encodeToString(rsaPublicKey.getPublicExponent().toByteArray());
@@ -267,11 +282,9 @@ public class DidServiceImpl implements DidService {
         publicKeyJwk.setE(e);
         publicKeyJwk.setAlg("PS256");
 
-        String didWebBase = didWeb
-                .replace("did:web:", "") // remove did type prefix
-                .replaceFirst("#.*", ""); // remove verification method reference
-        String certificateUrl = getDidDocumentUri(didWebBase)
-                .replace("did.json", "cert.pem");
+        String didWebBase = didWeb.replace("did:web:", "") // remove did type prefix
+            .replaceFirst("#.*", ""); // remove verification method reference
+        String certificateUrl = getDidDocumentUri(didWebBase).replace("did.json", "cert.pem");
 
         publicKeyJwk.setX5u(certificateUrl);
 
@@ -279,30 +292,23 @@ public class DidServiceImpl implements DidService {
 
         didDocument.getVerificationMethod().add(vm);
 
-        // Convert the DID object to JSON string
-        String didDocumentString;
-        try {
-            didDocumentString = objectMapper.writeValueAsString(didDocument);
-        } catch (JsonProcessingException ex) {
-            logger.error(ex.getMessage(), ex);
-            throw ex;
-        }
-
-        return didDocumentString;
+        // Return JSON string converted the DID object
+        return objectMapper.writeValueAsString(didDocument);
     }
 
     /**
-     * Given the domain part of the did:web, return the resulting URI.
-     * See <a href="https://w3c-ccg.github.io/did-method-web/#read-resolve">did-web specification</a> for reference.
+     * Given the domain part of the did:web, return the resulting URI. See <a
+     * href="https://w3c-ccg.github.io/did-method-web/#read-resolve">did-web specification</a> for reference.
      *
      * @param didWeb did:web without prefix and key reference
      * @return did web URI
      */
     private static String getDidDocumentUri(String didWeb) {
+
         boolean containsSubpath = didWeb.contains(":");
         StringBuilder didDocumentUriBuilder = new StringBuilder();
-        didDocumentUriBuilder.append(didWeb
-                .replace(":", "/") // Replace ":" with "/" in the method specific identifier to
+        didDocumentUriBuilder.append(
+            didWeb.replace(":", "/") // Replace ":" with "/" in the method specific identifier to
                 // obtain the fully qualified domain name and optional path.
                 .replace("%3A", ":")); // If the domain contains a port percent decode the colon.
 
@@ -324,13 +330,9 @@ public class DidServiceImpl implements DidService {
         ByteArrayInputStream certStream = new ByteArrayInputStream(certs.getBytes(StandardCharsets.UTF_8));
 
         List<X509Certificate> certificateList = null;
-        try {
-            CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
-            certificateList = (List<X509Certificate>) certFactory.generateCertificates(certStream);
-        } catch (CertificateException e) {
-            logger.error(e.getMessage(), e);
-            throw e;
-        }
+
+        CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
+        certificateList = (List<X509Certificate>) certFactory.generateCertificates(certStream);
 
         return certificateList.stream().findFirst().orElse(null);
     }
