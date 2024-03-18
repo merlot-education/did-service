@@ -184,7 +184,7 @@ public class DidDocumentServiceTests {
                             "n": "AN_x8C019z4or5NxVJzpXrVimEkVkj6ph2c_g4kspWe5zIfgZJof8Y7zZF59yo9gMuTd3-I2-D4d0sHeY8vkGR7xY8jszUvnNWdih1e2MOucXgOGvaGf-GWKaEmBd5vdqOujub1EBzYMc6G9JyULSCx_sbQI3XKHRZFLKC1f4eP4MtueXLx08XbIlvsIiIxQAaqDb9JQQ6nA2cK-wV7WBct0BwDz02J-EA-v9WD2LFagKEHBx8LM0Gop8T0i3FjV2TKyqKzOiRKlkPyumIhSNxJPltqB4F92ECXfrMQhcuHO4gYLux63jy2Tq9qwzYowScOmgcXadswqZgh-X9MFM_w_OPZn1nFzPXQgme7qUelyksZcdw-fivrfayXkW6g8I-ZY46Mv80hHN3n9NVNStAJyO644810mLHIbeUAG7CeZq4OGBt0THRRkkQJklaNedTR5vbH6_ZrSLM0_tKxEjAKQ8-S7v9pjICi66LUqcXvdipDS7zPsLMERjdd8bvSXDVbSjtn_qX9dCU8TRY-f1hOxDlHJ_qq-3POjiEGallCKFJbH-7oETdUEACnHFtiEyyNdfVGvGA-kq0d4Zlk9X0uNcdy9F8nqd_K_ah8cWVOagrlYcxFI5NrrRK0-owS2_R5q63zuRKxlcmTr0cQfPlAc3pmOyAcvHL-eSqRfmqzj",
                             "e": "AQAB",
                             "alg": "RS256",
-                            "x5u": "https:///marketplace.dev.merlot-education.eu/participant/46fa1bd9-3eb6-492f-84a0-5f78a42065b3/cert.pem"
+                            "x5u": "https://marketplace.dev.merlot-education.eu/participant/46fa1bd9-3eb6-492f-84a0-5f78a42065b3/cert.pem"
                         }
                     }
                 ]
