@@ -1,2 +1,2 @@
-merlot-domain: "marketplace.dev.merlot-education.eu"
-certificate-issuer: "MERLOT Federation"
+did-domain: "https://localhost%3A8443"
+certificate-issuer: "Example Federation"

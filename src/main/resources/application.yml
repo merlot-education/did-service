@@ -50,7 +50,7 @@ management:
     health:
       enabled: true
 
-merlot-domain: "marketplace.dev.merlot-education.eu"
+did-domain: "https://localhost%3A8443"
 
 cors:
   global:

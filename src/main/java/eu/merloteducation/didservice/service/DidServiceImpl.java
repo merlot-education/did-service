@@ -52,8 +52,8 @@ public class DidServiceImpl implements DidService {
     @Autowired
     private ParticipantCertificateRepository certificateRepository;
 
-    @Value("${merlot-domain}")
-    private String merlotDomain;
+    @Value("${did-domain}")
+    private String didDomain;
 
     @Value("${certificate-issuer}")
     private String certificateIssuer;
@@ -121,7 +121,7 @@ public class DidServiceImpl implements DidService {
 
     private String getDidWeb(String id) {
 
-        return "did:web:" + merlotDomain + ":participant:" + id;
+        return "did:web:" + didDomain + ":participant:" + id;
     }
 
     private KeyPair createKeyPair() throws NoSuchAlgorithmException {

@@ -6,7 +6,7 @@ cors:
       https://cif.demo.merlot-education.eu
     patterns:
 
-merlot-domain: "marketplace.demo.merlot-education.eu"
+did-domain: "marketplace.demo.merlot-education.eu"
 
 server:
   ssl:

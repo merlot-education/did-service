@@ -40,8 +40,8 @@ import static org.mockito.Mockito.when;
 @SpringBootTest
 @EnableConfigurationProperties
 public class DidDocumentServiceTests {
-    @Value("${merlot-domain}")
-    private String merlotDomain;
+    @Value("${did-domain}")
+    private String didDomain;
 
     @Value("${certificate-issuer}")
     private String certificateIssuer;
@@ -64,7 +64,7 @@ public class DidDocumentServiceTests {
     @Test
     void generateDidAndPrivateKeyCorrectly() throws Exception {
 
-        String didRegex = "did:web:" + merlotDomain + ":participant:[-A-Za-z0-9]*";
+        String didRegex = "did:web:" + didDomain + ":participant:[-A-Za-z0-9]*";
 
         ParticipantDidPrivateKeyCreateRequest request = new ParticipantDidPrivateKeyCreateRequest();
         request.setSubject("ABC Company");
