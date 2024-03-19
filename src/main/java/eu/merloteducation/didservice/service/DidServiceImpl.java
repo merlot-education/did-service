@@ -149,7 +149,7 @@ public class DidServiceImpl implements DidService {
 
     private String getDidWeb(String id) {
 
-        return "did:web:" + didDomain + ":participant:" + id;
+        return "did:web:" + didDomain.replaceFirst(":", "%3A") + ":participant:" + id;
     }
 
     private KeyPair createKeyPair() throws NoSuchAlgorithmException {

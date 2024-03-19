@@ -64,7 +64,7 @@ public class DidServiceTests {
     @Test
     void generateDidAndPrivateKeyCorrectly() throws Exception {
 
-        String didRegex = "did:web:" + didDomain + ":participant:[-A-Za-z0-9]*";
+        String didRegex = "did:web:" + didDomain.replaceFirst(":", "%3A") + ":participant:[-A-Za-z0-9]*";
 
         ParticipantDidPrivateKeyCreateRequest request = new ParticipantDidPrivateKeyCreateRequest();
         request.setSubject("ABC Company");

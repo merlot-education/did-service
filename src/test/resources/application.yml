@@ -1,2 +1,2 @@
-did-domain: "localhost%3A8443"
+did-domain: "localhost:8443"
 certificate-issuer: "Example Federation"
