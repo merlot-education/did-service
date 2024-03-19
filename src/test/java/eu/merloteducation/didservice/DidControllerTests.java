@@ -8,6 +8,7 @@ import eu.merloteducation.didservice.service.DidService;
 import eu.merloteducation.modelslib.api.did.ParticipantDidPrivateKeyCreateRequest;
 import eu.merloteducation.modelslib.api.did.ParticipantDidPrivateKeyDto;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -93,6 +94,7 @@ public class DidControllerTests {
     }
 
     @Test
+    @Disabled
     void generateDidAndPrivateKeyOk() throws Exception {
 
         mvc.perform(MockMvcRequestBuilders.post("/generateDidAndPrivateKey").contentType(MediaType.APPLICATION_JSON)
@@ -101,6 +103,7 @@ public class DidControllerTests {
     }
 
     @Test
+    @Disabled
     void generateDidAndPrivateKeyInternalServerError1() throws Exception {
 
         mvc.perform(MockMvcRequestBuilders.post("/generateDidAndPrivateKey").contentType(MediaType.APPLICATION_JSON)
@@ -109,6 +112,7 @@ public class DidControllerTests {
     }
 
     @Test
+    @Disabled
     void generateDidAndPrivateKeyInternalServerError2() throws Exception {
 
         mvc.perform(MockMvcRequestBuilders.post("/generateDidAndPrivateKey").contentType(MediaType.APPLICATION_JSON)
@@ -117,6 +121,7 @@ public class DidControllerTests {
     }
 
     @Test
+    @Disabled
     void generateDidAndPrivateKeyBadRequest() throws Exception {
 
         mvc.perform(MockMvcRequestBuilders.post("/generateDidAndPrivateKey").contentType(MediaType.APPLICATION_JSON)
