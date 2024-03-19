@@ -27,7 +27,7 @@ public class DidController {
      * @param request with information needed for certificate generation
      * @return dto containing the generated did:web, the verification method and the associated private key
      */
-    @PostMapping("/generateDidAndPrivateKey")
+//    @PostMapping("/generateDidAndPrivateKey")
     public ParticipantDidPrivateKeyDto generateDidAndPrivateKey(
         @RequestBody ParticipantDidPrivateKeyCreateRequest request) {
 
