@@ -72,6 +72,8 @@ public class DidServiceTests {
         ParticipantDidPrivateKeyDto dto = didService.generateDidAndPrivateKey(request);
 
         assertTrue(dto.getDid().matches(didRegex));
+        System.out.println(dto.getVerificationMethod());
+        assertTrue(dto.getVerificationMethod().matches(didRegex + "#JWK2020"));
 
         String privateKeyString = dto.getPrivateKey();
         assertTrue(privateKeyString.startsWith("-----BEGIN PRIVATE KEY-----"));
