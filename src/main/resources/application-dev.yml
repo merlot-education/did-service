@@ -9,8 +9,8 @@ cors:
 did-domain: "marketplace.dev.merlot-education.eu"
 
 server:
-  port: 8088
+  port: 8088 # with ssl disabled this will be the http port
   ssl:
     enabled: false # will be set by cluster
   http:
-    port: 0
+    port: 0 # disable other ports
