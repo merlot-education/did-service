@@ -59,9 +59,9 @@ jobs:
           build-args: |
             ENVIRONMENT=${{ env.environment }}
 
-      #- name: Dispatch update
-      #  run: |
-      #    curl -H "Accept: application/vnd.github+json" \
-      #    -H "Authorization: token ${{ secrets.GIT_OPS_TOKEN }}" \
-      #    --request POST \
-      #    --data '{"event_type": "image_update", "client_payload": { "environment": "${{ env.environment }}", "tag": "${{ env.tag }}", "key": ".image.tag", "app": "did-service" }}' https://api.github.com/repos/merlot-education/gitops/dispatches
+      - name: Dispatch update
+        run: |
+          curl -H "Accept: application/vnd.github+json" \
+          -H "Authorization: token ${{ secrets.GIT_OPS_TOKEN }}" \
+          --request POST \
+          --data '{"event_type": "image_update", "client_payload": { "environment": "${{ env.environment }}", "tag": "${{ env.tag }}", "key": ".image.tag", "app": "didservice-orchestrator" }}' https://api.github.com/repos/merlot-education/gitops/dispatches
