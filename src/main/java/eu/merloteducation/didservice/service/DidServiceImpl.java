@@ -10,6 +10,7 @@ import eu.merloteducation.didservice.models.exceptions.*;
 import eu.merloteducation.didservice.repositories.ParticipantCertificateRepository;
 import eu.merloteducation.modelslib.api.did.ParticipantDidPrivateKeyCreateRequest;
 import eu.merloteducation.modelslib.api.did.ParticipantDidPrivateKeyDto;
+import jakarta.transaction.Transactional;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.BasicConstraints;
@@ -63,6 +64,7 @@ public class DidServiceImpl implements DidService {
     private String certificateIssuer;
 
     @Override
+    @Transactional
     public String getCertificate(String id) throws ParticipantNotFoundException {
 
         String didWeb = getDidWeb(id);
@@ -77,6 +79,7 @@ public class DidServiceImpl implements DidService {
     }
 
     @Override
+    @Transactional
     public String getDidDocument(String id) throws ParticipantNotFoundException, DidDocumentGenerationException {
 
         String didWeb = getDidWeb(id);
@@ -200,6 +203,7 @@ public class DidServiceImpl implements DidService {
         return cert;
     }
 
+    @Transactional
     private void storeDidAndCertificate(String did, X509Certificate certificate) throws PemConversionException {
 
         ParticipantCertificate cert = new ParticipantCertificate();
