@@ -19,7 +19,7 @@ public class ParticipantCertificate {
     @NotNull
     private String did;
 
-    @Lob
+    @Column(columnDefinition = "TEXT")
     @NotNull
     private String certificate;
 }
