@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>eu.merlot-education</groupId>
 	<artifactId>did-service</artifactId>
-	<version>0.0.1</version>
+	<version>0.1.0</version>
 	<name>did-service</name>
 	<description>DID service</description>
 	<parent>
