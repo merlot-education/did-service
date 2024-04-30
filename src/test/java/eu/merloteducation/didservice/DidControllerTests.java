@@ -35,7 +35,7 @@ public class DidControllerTests {
     @BeforeEach
     public void beforeEach() throws Exception {
 
-        ParticipantDidPrivateKeyDto dto = new ParticipantDidPrivateKeyDto("did:web", "did:web#vm", "private key");
+        ParticipantDidPrivateKeyDto dto = new ParticipantDidPrivateKeyDto("did:web", "did:web#mvm", "did:web#vm", "private key");
         ParticipantDidPrivateKeyCreateRequest emptyRequest = getEmptyCreateRequest();
         ParticipantDidPrivateKeyCreateRequest request1 = getCreateRequestCryptoAssetGenException();
         ParticipantDidPrivateKeyCreateRequest request2 = getCreateRequestPemConversionException();

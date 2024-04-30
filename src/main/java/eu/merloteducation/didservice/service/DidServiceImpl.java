@@ -8,8 +8,10 @@ import eu.merloteducation.didservice.models.did.VerificationMethod;
 import eu.merloteducation.didservice.models.entities.ParticipantCertificate;
 import eu.merloteducation.didservice.models.exceptions.*;
 import eu.merloteducation.didservice.repositories.ParticipantCertificateRepository;
+import eu.merloteducation.gxfscataloglibrary.service.GxfsCatalogService;
 import eu.merloteducation.modelslib.api.did.ParticipantDidPrivateKeyCreateRequest;
 import eu.merloteducation.modelslib.api.did.ParticipantDidPrivateKeyDto;
+import io.netty.util.internal.StringUtil;
 import jakarta.transaction.Transactional;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -29,9 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.StringWriter;
+import java.io.*;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
@@ -48,6 +48,9 @@ public class DidServiceImpl implements DidService {
     private static final int KEY_SIZE = 4096;
 
     private static final String VM_TYPE_ID = "#JWK2020";
+    private static final String VM_TYPE_ID_MERLOT = "#MERLOTJWK2020";
+    private static final String VM_TYPE = "JsonWebKey2020";
+    private static final String VM_CONTEXT = "https://w3c-ccg.github.io/lds-jws2020/contexts/v1/";
 
     private final Logger logger = LoggerFactory.getLogger(DidService.class);
 
@@ -63,11 +66,18 @@ public class DidServiceImpl implements DidService {
     @Value("${certificate-issuer}")
     private String certificateIssuer;
 
+    private final String defaultCertPath;
+
+    public DidServiceImpl(@Value("${did-service.cert-path:#{null}}") String defaultCertPath) {
+
+        this.defaultCertPath = defaultCertPath;
+    }
+
     @Override
     @Transactional
     public String getCertificate(String id) throws ParticipantNotFoundException {
 
-        String didWeb = getDidWeb(id);
+        String didWeb = getDidWebForParticipant(id);
 
         ParticipantCertificate participantCertificate = certificateRepository.findByDid(didWeb);
 
@@ -82,7 +92,7 @@ public class DidServiceImpl implements DidService {
     @Transactional
     public String getDidDocument(String id) throws ParticipantNotFoundException, DidDocumentGenerationException {
 
-        String didWeb = getDidWeb(id);
+        String didWeb = getDidWebForParticipant(id);
 
         ParticipantCertificate participantCertificate = certificateRepository.findByDid(didWeb);
 
@@ -147,12 +157,17 @@ public class DidServiceImpl implements DidService {
     private String generateDidWeb(String seed) {
 
         String uuid = UUID.nameUUIDFromBytes(seed.getBytes(StandardCharsets.UTF_8)).toString();
-        return getDidWeb(uuid);
+        return getDidWebForParticipant(uuid);
     }
 
-    private String getDidWeb(String id) {
+    private String getDidWebForParticipant(String id) {
 
-        return "did:web:" + didDomain.replaceFirst(":", "%3A") + ":participant:" + id;
+        return getDidWebForMerlot() + ":participant:" + id;
+    }
+
+    private String getDidWebForMerlot() {
+
+        return "did:web:" + didDomain.replaceFirst(":", "%3A");
     }
 
     private KeyPair createKeyPair() throws NoSuchAlgorithmException {
@@ -244,6 +259,7 @@ public class DidServiceImpl implements DidService {
 
         ParticipantDidPrivateKeyDto dto = new ParticipantDidPrivateKeyDto();
         dto.setDid(did);
+        dto.setMerlotVerificationMethod(did + VM_TYPE_ID_MERLOT);
         dto.setVerificationMethod(did + VM_TYPE_ID);
         dto.setPrivateKey(convertPrivateKeyToPemString(privateKey));
 
@@ -251,27 +267,36 @@ public class DidServiceImpl implements DidService {
     }
 
     private String createDidDocument(ParticipantCertificate participantCertificate)
-        throws JsonProcessingException, PemConversionException {
+        throws JsonProcessingException, PemConversionException, CertificateException {
 
-        String didWeb = participantCertificate.getDid();
+        String didWebParticipant = participantCertificate.getDid();
 
         DidDocument didDocument = new DidDocument();
         didDocument.setContext(List.of("https://www.w3.org/ns/did/v1", "https://w3id.org/security/suites/jws-2020/v1"));
-        didDocument.setId(didWeb);
+        didDocument.setId(didWebParticipant);
         didDocument.setVerificationMethod(new ArrayList<>());
 
-        String vmContext = "https://w3c-ccg.github.io/lds-jws2020/contexts/v1/";
-        String type = "JsonWebKey2020";
+        VerificationMethod participantVerificationMethod = getVerificationMethod(didWebParticipant, participantCertificate.getCertificate());
+        VerificationMethod merlotVerificationMethod = getVerificationMethod(getDidWebForMerlot(), getMerlotCertificatePemString());
+        merlotVerificationMethod.setId(didWebParticipant + VM_TYPE_ID_MERLOT);
 
+        didDocument.getVerificationMethod().add(participantVerificationMethod);
+        didDocument.getVerificationMethod().add(merlotVerificationMethod);
+
+        // Return JSON string converted the DID object
+        return objectMapper.writeValueAsString(didDocument);
+    }
+
+    private VerificationMethod getVerificationMethod(String didWeb, String certificate) throws PemConversionException {
         VerificationMethod vm = new VerificationMethod();
-        vm.setContext(List.of(vmContext));
+        vm.setContext(List.of(VM_CONTEXT));
         vm.setId(didWeb + VM_TYPE_ID);
-        vm.setType(type);
+        vm.setType(VM_TYPE);
         vm.setController(didWeb);
 
         X509Certificate x509Certificate = null;
         try {
-            x509Certificate = convertPemStringToCertificate(participantCertificate.getCertificate());
+            x509Certificate = convertPemStringToCertificate(certificate);
         } catch (CertificateException e) {
             throw new PemConversionException("Certificate conversion failed: " + e.getMessage());
         }
@@ -294,10 +319,7 @@ public class DidServiceImpl implements DidService {
 
         vm.setPublicKeyJwk(publicKeyJwk);
 
-        didDocument.getVerificationMethod().add(vm);
-
-        // Return JSON string converted the DID object
-        return objectMapper.writeValueAsString(didDocument);
+        return vm;
     }
 
     /**
@@ -339,5 +361,23 @@ public class DidServiceImpl implements DidService {
         certificateList = (List<X509Certificate>) certFactory.generateCertificates(certStream);
 
         return certificateList.stream().findFirst().orElse(null);
+    }
+
+    /**
+     * Load the merlot certificate from file.
+     *
+     * @return string representation of certificate
+     * @throws CertificateException error during loading of the certificate
+     */
+    private String getMerlotCertificatePemString() throws CertificateException {
+        try (InputStream certificateStream = StringUtil.isNullOrEmpty(defaultCertPath) ?
+            GxfsCatalogService.class.getClassLoader().getResourceAsStream("cert.ss.pem")
+            : new FileInputStream(defaultCertPath)) {
+            return new String(Objects.requireNonNull(certificateStream,
+                "Certificate input stream is null.").readAllBytes(),
+                StandardCharsets.UTF_8);
+        } catch (IOException | NullPointerException e) {
+            throw new CertificateException("Failed to read merlot certificate. " + e.getMessage());
+        }
     }
 }
