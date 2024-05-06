@@ -54,23 +54,32 @@ public class DidServiceImpl implements DidService {
 
     private final Logger logger = LoggerFactory.getLogger(DidService.class);
 
-    @Autowired
-    private ParticipantCertificateRepository certificateRepository;
+    private final ParticipantCertificateRepository certificateRepository;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
-    @Value("${did-domain}")
-    private String didDomain;
+    private final String didDomain;
 
-    @Value("${certificate-issuer}")
-    private String certificateIssuer;
+    private final String certificateIssuer;
 
     private final String defaultCertPath;
 
-    public DidServiceImpl(@Value("${did-service.cert-path:#{null}}") String defaultCertPath) {
+    private final boolean merlotVMEnabled;
+
+    public DidServiceImpl(@Value("${merlot-cert-path:#{null}}") String defaultCertPath,
+                          @Value("${merlot-verification-method-enabled}") boolean merlotVMEnabled,
+                          @Value("${certificate-issuer}") String certificateIssuer,
+                          @Value("${did-domain}") String didDomain,
+                          @Autowired ObjectMapper objectMapper,
+                          @Autowired  ParticipantCertificateRepository certificateRepository
+        ) {
 
         this.defaultCertPath = defaultCertPath;
+        this.merlotVMEnabled = merlotVMEnabled;
+        this.certificateIssuer = certificateIssuer;
+        this.didDomain = didDomain;
+        this.objectMapper = objectMapper;
+        this.certificateRepository = certificateRepository;
     }
 
     @Override
@@ -259,9 +268,12 @@ public class DidServiceImpl implements DidService {
 
         ParticipantDidPrivateKeyDto dto = new ParticipantDidPrivateKeyDto();
         dto.setDid(did);
-        dto.setMerlotVerificationMethod(did + VM_TYPE_ID_MERLOT);
         dto.setVerificationMethod(did + VM_TYPE_ID);
         dto.setPrivateKey(convertPrivateKeyToPemString(privateKey));
+
+        if (merlotVMEnabled) {
+            dto.setMerlotVerificationMethod(did + VM_TYPE_ID_MERLOT);
+        }
 
         return dto;
     }
@@ -277,11 +289,13 @@ public class DidServiceImpl implements DidService {
         didDocument.setVerificationMethod(new ArrayList<>());
 
         VerificationMethod participantVerificationMethod = getVerificationMethod(didWebParticipant, participantCertificate.getCertificate());
-        VerificationMethod merlotVerificationMethod = getVerificationMethod(getDidWebForMerlot(), getMerlotCertificatePemString());
-        merlotVerificationMethod.setId(didWebParticipant + VM_TYPE_ID_MERLOT);
-
         didDocument.getVerificationMethod().add(participantVerificationMethod);
-        didDocument.getVerificationMethod().add(merlotVerificationMethod);
+
+        if (merlotVMEnabled) {
+            VerificationMethod merlotVerificationMethod = getVerificationMethod(getDidWebForMerlot(), getMerlotCertificatePemString());
+            merlotVerificationMethod.setId(didWebParticipant + VM_TYPE_ID_MERLOT);
+            didDocument.getVerificationMethod().add(merlotVerificationMethod);
+        }
 
         // Return JSON string converted the DID object
         return objectMapper.writeValueAsString(didDocument);
