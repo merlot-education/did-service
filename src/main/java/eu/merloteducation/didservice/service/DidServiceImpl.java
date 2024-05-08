@@ -8,7 +8,6 @@ import eu.merloteducation.didservice.models.did.VerificationMethod;
 import eu.merloteducation.didservice.models.entities.ParticipantCertificate;
 import eu.merloteducation.didservice.models.exceptions.*;
 import eu.merloteducation.didservice.repositories.ParticipantCertificateRepository;
-import eu.merloteducation.gxfscataloglibrary.service.GxfsCatalogService;
 import eu.merloteducation.modelslib.api.did.ParticipantDidPrivateKeyCreateRequest;
 import eu.merloteducation.modelslib.api.did.ParticipantDidPrivateKeyDto;
 import io.netty.util.internal.StringUtil;
@@ -385,7 +384,7 @@ public class DidServiceImpl implements DidService {
      */
     private String getMerlotCertificatePemString() throws CertificateException {
         try (InputStream certificateStream = StringUtil.isNullOrEmpty(defaultCertPath) ?
-            GxfsCatalogService.class.getClassLoader().getResourceAsStream("cert.ss.pem")
+            DidServiceImpl.class.getClassLoader().getResourceAsStream("cert.ss.pem")
             : new FileInputStream(defaultCertPath)) {
             return new String(Objects.requireNonNull(certificateStream,
                 "Certificate input stream is null.").readAllBytes(),
