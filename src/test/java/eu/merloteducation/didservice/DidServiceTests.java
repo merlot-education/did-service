@@ -187,7 +187,7 @@ public class DidServiceTests {
                             "n": "AN_x8C019z4or5NxVJzpXrVimEkVkj6ph2c_g4kspWe5zIfgZJof8Y7zZF59yo9gMuTd3-I2-D4d0sHeY8vkGR7xY8jszUvnNWdih1e2MOucXgOGvaGf-GWKaEmBd5vdqOujub1EBzYMc6G9JyULSCx_sbQI3XKHRZFLKC1f4eP4MtueXLx08XbIlvsIiIxQAaqDb9JQQ6nA2cK-wV7WBct0BwDz02J-EA-v9WD2LFagKEHBx8LM0Gop8T0i3FjV2TKyqKzOiRKlkPyumIhSNxJPltqB4F92ECXfrMQhcuHO4gYLux63jy2Tq9qwzYowScOmgcXadswqZgh-X9MFM_w_OPZn1nFzPXQgme7qUelyksZcdw-fivrfayXkW6g8I-ZY46Mv80hHN3n9NVNStAJyO644810mLHIbeUAG7CeZq4OGBt0THRRkkQJklaNedTR5vbH6_ZrSLM0_tKxEjAKQ8-S7v9pjICi66LUqcXvdipDS7zPsLMERjdd8bvSXDVbSjtn_qX9dCU8TRY-f1hOxDlHJ_qq-3POjiEGallCKFJbH-7oETdUEACnHFtiEyyNdfVGvGA-kq0d4Zlk9X0uNcdy9F8nqd_K_ah8cWVOagrlYcxFI5NrrRK0-owS2_R5q63zuRKxlcmTr0cQfPlAc3pmOyAcvHL-eSqRfmqzj",
                             "e": "AQAB",
                             "alg": "PS256",
-                            "x5u": "https://localhost:8443/participant/46fa1bd9-3eb6-492f-84a0-5f78a42065b3/cert.pem"
+                            "x5u": "https://localhost:8443/participant/46fa1bd9-3eb6-492f-84a0-5f78a42065b3/cert.ss.pem"
                         }
                     },
                     {
@@ -202,7 +202,7 @@ public class DidServiceTests {
                             "n": "ANJ2GVOhLrsxygQs5HAWarDJFWV54GDu1bo3y1P-MrO6JxeB8UyTz9zhihI242zIJqWu7ymlkaJrf11043pgN693-bfG49CKKhX720yKuuRlCCIeMtplW6JnXEC0StgLn-_bw4qojjZJ00rLaD4wIgoOres_yq7hhWWwzoWJGcKq4xp5gfy3xUpaXi8JEEPuXVS4YV5CJploZwAqAKPBAp8tuAKe8C2zfYvaNXzUs9rrMwAo9M8RYZdzRrpxxVJt2JBndFEb6E6F6SvWuM34oUlMR43k9P-2vablReBN8NQAI0oeJ1d6SxNHCcgyE1W9jOHd5vbY48_918I2IgACdTClQUigzNu6XsURQiY_w72_na_gCJoagYTwx5_4I3WkWSFaAAwuM8AVC5Kb1GlCCpjRcmDow2Flkwc03-BrPUC-WnZVX1citeDGTwTsqvnKiCMpoKegOf0d4SpwggT_Av0tPlQ4nYSOj6-VST8fQ8nSNHgdg4jsjmb234O7ClZCVxVBCUYgUzIbo8o2Knk7Qh4whR3LWVUPIVNu_XspO5qZqQ65LXwhSRYvtNGc0Fk4LcwaBoZHuYY9IY7RtZ-IzegX8qXU-aAfg3l5dj9Yaf4TQvSOYL3llGBwKjeFSr3v-dgN7m_LwZSEkIRFHmaBVLXq04gwNzciu8LI_1e_ijOl",
                             "e": "AQAB",
                             "alg": "PS256",
-                            "x5u": "https://localhost:8443/.well-known/cert.pem"
+                            "x5u": "https://localhost:8443/.well-known/cert.ss.pem"
                         }
                     }
                 ]
