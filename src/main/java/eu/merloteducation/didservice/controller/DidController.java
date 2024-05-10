@@ -73,7 +73,7 @@ public class DidController {
      * @param id id for retrieving the certificate
      * @return certificate
      */
-    @GetMapping(value = "/participant/{id}/cert.pem", produces = "application/x-x509-ca-cert")
+    @GetMapping(value = "/participant/{id}/cert.ss.pem", produces = "application/x-x509-ca-cert")
     public ResponseEntity<String> getCertificate(@PathVariable(value = "id") String id) {
 
         String certificate = null;
