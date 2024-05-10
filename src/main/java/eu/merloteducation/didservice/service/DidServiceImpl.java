@@ -326,7 +326,7 @@ public class DidServiceImpl implements DidService {
 
         String didWebBase = didWeb.replace("did:web:", "") // remove did type prefix
             .replaceFirst("#.*", ""); // remove verification method reference
-        String certificateUrl = getDidDocumentUri(didWebBase).replace("did.json", "cert.pem");
+        String certificateUrl = getDidDocumentUri(didWebBase).replace("did.json", "cert.ss.pem");
 
         publicKeyJwk.setX5u(certificateUrl);
 
