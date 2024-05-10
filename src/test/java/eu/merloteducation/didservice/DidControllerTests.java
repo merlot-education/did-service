@@ -81,14 +81,14 @@ public class DidControllerTests {
     @Test
     void getCertificateOk() throws Exception {
 
-        mvc.perform(MockMvcRequestBuilders.get("/participant/any/cert.pem")
+        mvc.perform(MockMvcRequestBuilders.get("/participant/any/cert.ss.pem")
             .accept(MediaType.parseMediaType("application/x-x509-ca-cert"))).andDo(print()).andExpect(status().isOk());
     }
 
     @Test
     void getCertificateNotFound() throws Exception {
 
-        mvc.perform(MockMvcRequestBuilders.get("/participant/unknown-participant/cert.pem")
+        mvc.perform(MockMvcRequestBuilders.get("/participant/unknown-participant/cert.ss.pem")
                 .contentType(MediaType.APPLICATION_JSON).accept(MediaType.parseMediaType("application/x-x509-ca-cert")))
             .andDo(print()).andExpect(status().isNotFound());
     }
