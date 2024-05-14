@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest({ DidController.class })
 @AutoConfigureMockMvc
-public class DidControllerTests {
+class DidControllerTests {
     @MockBean
     private DidService didService;
 
@@ -63,6 +63,13 @@ public class DidControllerTests {
     }
 
     @Test
+    void getMerlotDidDocumentOk() throws Exception {
+
+        mvc.perform(MockMvcRequestBuilders.get("/.well-known/did.json").accept(MediaType.APPLICATION_JSON))
+                .andDo(print()).andExpect(status().isOk());
+    }
+
+    @Test
     void getDidDocumentNotFound() throws Exception {
 
         mvc.perform(
@@ -83,6 +90,13 @@ public class DidControllerTests {
 
         mvc.perform(MockMvcRequestBuilders.get("/participant/any/cert.ss.pem")
             .accept(MediaType.parseMediaType("application/x-x509-ca-cert"))).andDo(print()).andExpect(status().isOk());
+    }
+
+    @Test
+    void getMerlotCertificateOk() throws Exception {
+
+        mvc.perform(MockMvcRequestBuilders.get("/.well-known/cert.ss.pem")
+                .accept(MediaType.parseMediaType("application/x-x509-ca-cert"))).andDo(print()).andExpect(status().isOk());
     }
 
     @Test

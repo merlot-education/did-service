@@ -12,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.security.cert.CertificateException;
+
 import static org.springframework.http.HttpStatus.*;
 
 @RestController
@@ -47,12 +49,12 @@ public class DidController {
      * GET endpoint for retrieving the DID document for given participant.
      *
      * @param id id for retrieving the DID document
-     * @return DID document
+     * @return participant DID document
      */
     @GetMapping(value = "/participant/{id}/did.json", produces = "application/json")
     public ResponseEntity<String> getDidDocument(@PathVariable(value = "id") String id) {
 
-        String didDocument = null;
+        String didDocument;
         try {
             didDocument = didService.getDidDocument(id);
         } catch (ParticipantNotFoundException e1) {
@@ -71,12 +73,12 @@ public class DidController {
      * GET endpoint for retrieving the certificate for given participant.
      *
      * @param id id for retrieving the certificate
-     * @return certificate
+     * @return participant certificate
      */
     @GetMapping(value = "/participant/{id}/cert.ss.pem", produces = "application/x-x509-ca-cert")
     public ResponseEntity<String> getCertificate(@PathVariable(value = "id") String id) {
 
-        String certificate = null;
+        String certificate;
 
         try {
             certificate = didService.getCertificate(id);
@@ -88,5 +90,35 @@ public class DidController {
         headers.setContentType(MediaType.parseMediaType("application/x-x509-ca-cert"));
 
         return new ResponseEntity<>(certificate, headers, HttpStatus.OK);
+    }
+
+    /**
+     * GET endpoint for retrieving the DID document for the MERLOT federation.
+     *
+     * @return MERLOT DID document
+     */
+    @GetMapping(value = "/.well-known/did.json", produces = "application/json")
+    public String getMerlotDidDocument() {
+        try {
+            return didService.getMerlotDidDocument();
+        } catch (DidDocumentGenerationException e) {
+            throw new ResponseStatusException(INTERNAL_SERVER_ERROR,
+                    "Did document provision failed: " + e.getMessage());
+        }
+    }
+
+    /**
+     * GET endpoint for retrieving the certificate for the MERLOT federation.
+     *
+     * @return MERLOT certificate
+     */
+    @GetMapping(value = "/.well-known/cert.ss.pem", produces = "application/x-x509-ca-cert")
+    public String getCertificate() {
+        try {
+            return didService.getMerlotCertificate();
+        } catch (CertificateException e) {
+            throw new ResponseStatusException(INTERNAL_SERVER_ERROR, "Failed to load federation certificate.");
+        }
+
     }
 }

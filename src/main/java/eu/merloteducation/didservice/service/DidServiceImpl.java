@@ -51,8 +51,6 @@ public class DidServiceImpl implements DidService {
     private static final String VM_TYPE = "JsonWebKey2020";
     private static final String VM_CONTEXT = "https://w3c-ccg.github.io/lds-jws2020/contexts/v1/";
 
-    private final Logger logger = LoggerFactory.getLogger(DidService.class);
-
     private final ParticipantCertificateRepository certificateRepository;
 
     private final ObjectMapper objectMapper;
@@ -97,6 +95,11 @@ public class DidServiceImpl implements DidService {
     }
 
     @Override
+    public String getMerlotCertificate() throws CertificateException {
+        return getMerlotCertificatePemString();
+    }
+
+    @Override
     @Transactional
     public String getDidDocument(String id) throws ParticipantNotFoundException, DidDocumentGenerationException {
 
@@ -117,6 +120,19 @@ public class DidServiceImpl implements DidService {
         }
 
         return didDocumentString;
+    }
+
+    @Override
+    public String getMerlotDidDocument() throws DidDocumentGenerationException {
+        try {
+            ParticipantCertificate federationCert = new ParticipantCertificate();
+            federationCert.setDid(getDidWebForMerlot());
+            federationCert.setCertificate(getMerlotCertificate());
+            return createDidDocument(federationCert);
+        } catch (CertificateException | JsonProcessingException | PemConversionException e) {
+            throw new DidDocumentGenerationException("Failed to build did.json for Federation: " + e.getMessage());
+        }
+
     }
 
     /**
