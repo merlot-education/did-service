@@ -18,14 +18,17 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import java.security.cert.CertificateException;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest({ DidController.class })
 @AutoConfigureMockMvc
-public class DidControllerTests {
+class DidControllerTests {
     @MockBean
     private DidService didService;
 
@@ -35,7 +38,7 @@ public class DidControllerTests {
     @BeforeEach
     public void beforeEach() throws Exception {
 
-        ParticipantDidPrivateKeyDto dto = new ParticipantDidPrivateKeyDto("did:web", "did:web#vm", "private key");
+        ParticipantDidPrivateKeyDto dto = new ParticipantDidPrivateKeyDto("did:web", "did:web#mvm", "did:web#vm", "private key");
         ParticipantDidPrivateKeyCreateRequest emptyRequest = getEmptyCreateRequest();
         ParticipantDidPrivateKeyCreateRequest request1 = getCreateRequestCryptoAssetGenException();
         ParticipantDidPrivateKeyCreateRequest request2 = getCreateRequestPemConversionException();
@@ -63,6 +66,20 @@ public class DidControllerTests {
     }
 
     @Test
+    void getMerlotDidDocumentOk() throws Exception {
+
+        mvc.perform(MockMvcRequestBuilders.get("/.well-known/did.json").accept(MediaType.APPLICATION_JSON))
+                .andDo(print()).andExpect(status().isOk());
+    }
+
+    @Test
+    void getMerlotDidDocumentFailed() throws Exception {
+        when(didService.getMerlotDidDocument()).thenThrow(new DidDocumentGenerationException("Failed to generate did document"));
+        mvc.perform(MockMvcRequestBuilders.get("/.well-known/did.json").accept(MediaType.APPLICATION_JSON))
+                .andDo(print()).andExpect(status().isInternalServerError());
+    }
+
+    @Test
     void getDidDocumentNotFound() throws Exception {
 
         mvc.perform(
@@ -81,14 +98,28 @@ public class DidControllerTests {
     @Test
     void getCertificateOk() throws Exception {
 
-        mvc.perform(MockMvcRequestBuilders.get("/participant/any/cert.pem")
+        mvc.perform(MockMvcRequestBuilders.get("/participant/any/cert.ss.pem")
             .accept(MediaType.parseMediaType("application/x-x509-ca-cert"))).andDo(print()).andExpect(status().isOk());
+    }
+
+    @Test
+    void getMerlotCertificateOk() throws Exception {
+
+        mvc.perform(MockMvcRequestBuilders.get("/.well-known/cert.ss.pem")
+                .accept(MediaType.parseMediaType("application/x-x509-ca-cert"))).andDo(print()).andExpect(status().isOk());
+    }
+
+    @Test
+    void getMerlotCertificateReadFail() throws Exception {
+        when(didService.getMerlotCertificate()).thenThrow(new CertificateException("failed to read cert"));
+        mvc.perform(MockMvcRequestBuilders.get("/.well-known/cert.ss.pem")
+                .accept(MediaType.parseMediaType("application/x-x509-ca-cert"))).andDo(print()).andExpect(status().isInternalServerError());
     }
 
     @Test
     void getCertificateNotFound() throws Exception {
 
-        mvc.perform(MockMvcRequestBuilders.get("/participant/unknown-participant/cert.pem")
+        mvc.perform(MockMvcRequestBuilders.get("/participant/unknown-participant/cert.ss.pem")
                 .contentType(MediaType.APPLICATION_JSON).accept(MediaType.parseMediaType("application/x-x509-ca-cert")))
             .andDo(print()).andExpect(status().isNotFound());
     }

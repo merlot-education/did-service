@@ -67,3 +67,6 @@ cors:
       http://localhost:[*]
 
 certificate-issuer: "MERLOT Federation"
+
+merlot-cert-path: ""
+merlot-verification-method-enabled: true

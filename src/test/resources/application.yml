@@ -1,2 +1,4 @@
 did-domain: "localhost:8443"
 certificate-issuer: "Example Federation"
+merlot-cert-path: ""
+merlot-verification-method-enabled: true
