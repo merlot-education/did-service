@@ -18,8 +18,11 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import java.security.cert.CertificateException;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -70,6 +73,13 @@ class DidControllerTests {
     }
 
     @Test
+    void getMerlotDidDocumentFailed() throws Exception {
+        when(didService.getMerlotDidDocument()).thenThrow(new DidDocumentGenerationException("Failed to generate did document"));
+        mvc.perform(MockMvcRequestBuilders.get("/.well-known/did.json").accept(MediaType.APPLICATION_JSON))
+                .andDo(print()).andExpect(status().isInternalServerError());
+    }
+
+    @Test
     void getDidDocumentNotFound() throws Exception {
 
         mvc.perform(
@@ -97,6 +107,13 @@ class DidControllerTests {
 
         mvc.perform(MockMvcRequestBuilders.get("/.well-known/cert.ss.pem")
                 .accept(MediaType.parseMediaType("application/x-x509-ca-cert"))).andDo(print()).andExpect(status().isOk());
+    }
+
+    @Test
+    void getMerlotCertificateReadFail() throws Exception {
+        when(didService.getMerlotCertificate()).thenThrow(new CertificateException("failed to read cert"));
+        mvc.perform(MockMvcRequestBuilders.get("/.well-known/cert.ss.pem")
+                .accept(MediaType.parseMediaType("application/x-x509-ca-cert"))).andDo(print()).andExpect(status().isInternalServerError());
     }
 
     @Test

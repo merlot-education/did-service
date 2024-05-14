@@ -23,29 +23,6 @@ public class DidController {
     private DidService didService;
 
     /**
-     * POST endpoint for generating a did:web, a key pair and a certificate. Returns the did:web, the verification
-     * method and the associated private key.
-     *
-     * @param request with information needed for certificate generation
-     * @return dto containing the generated did:web, the verification method and the associated private key
-     */
-//    @PostMapping("/generateDidAndPrivateKey")
-    public ParticipantDidPrivateKeyDto generateDidAndPrivateKey(
-        @RequestBody ParticipantDidPrivateKeyCreateRequest request) {
-
-        try {
-            return didService.generateDidAndPrivateKey(request);
-        } catch (CryptographicAssetGenerationException e1) {
-            throw new ResponseStatusException(INTERNAL_SERVER_ERROR,
-                "Cryptographic asset creation failed: " + e1.getMessage());
-        } catch (PemConversionException e2) {
-            throw new ResponseStatusException(INTERNAL_SERVER_ERROR, e2.getMessage());
-        } catch (RequestArgumentException e3) {
-            throw new ResponseStatusException(BAD_REQUEST, e3.getMessage());
-        }
-    }
-
-    /**
      * GET endpoint for retrieving the DID document for given participant.
      *
      * @param id id for retrieving the DID document
