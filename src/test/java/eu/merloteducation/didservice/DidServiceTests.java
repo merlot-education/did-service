@@ -112,6 +112,12 @@ public class DidServiceTests {
     }
 
     @Test
+    void getMerlotCertificate() throws Exception {
+        String merlotCert = didService.getMerlotCertificate();
+        assertNotNull(merlotCert);
+    }
+
+    @Test
     void getDidDocumentCorrectly() throws Exception {
 
         ObjectMapper mapper = new ObjectMapper();
@@ -126,6 +132,12 @@ public class DidServiceTests {
         DidDocument actual = mapper.readValue(actualJsonString, DidDocument.class);
 
         assertThat(actual).usingRecursiveComparison().isEqualTo(expected);
+    }
+
+    @Test
+    void getMerlotDidDocument() throws Exception {
+        String merlotDidDocument = didService.getMerlotDidDocument();
+        assertNotNull(merlotDidDocument);
     }
 
     private ParticipantCertificate getTestParticipantCertificate() {
