@@ -16,13 +16,15 @@
 
 package eu.merloteducation.didservice.config;
 
+import jakarta.annotation.PostConstruct;
 import org.springframework.context.annotation.Configuration;
 import java.security.Security;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 @Configuration
 public class SecurityConfig {
-    static {
+    @PostConstruct
+    public void init(){
         Security.addProvider(new BouncyCastleProvider());
     }
 }

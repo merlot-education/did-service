@@ -141,7 +141,7 @@ class DidControllerTests {
     }
 
     @Test
-    @Disabled
+    @Disabled("Currently did should not get generated using HTTP API")
     void generateDidAndPrivateKeyOk() throws Exception {
 
         mvc.perform(MockMvcRequestBuilders.post("/generateDidAndPrivateKey").contentType(MediaType.APPLICATION_JSON)
@@ -150,7 +150,7 @@ class DidControllerTests {
     }
 
     @Test
-    @Disabled
+    @Disabled("Currently did should not get generated using HTTP API")
     void generateDidAndPrivateKeyInternalServerError1() throws Exception {
 
         mvc.perform(MockMvcRequestBuilders.post("/generateDidAndPrivateKey").contentType(MediaType.APPLICATION_JSON)
@@ -159,7 +159,7 @@ class DidControllerTests {
     }
 
     @Test
-    @Disabled
+    @Disabled("Currently did should not get generated using HTTP API")
     void generateDidAndPrivateKeyInternalServerError2() throws Exception {
 
         mvc.perform(MockMvcRequestBuilders.post("/generateDidAndPrivateKey").contentType(MediaType.APPLICATION_JSON)
@@ -168,7 +168,7 @@ class DidControllerTests {
     }
 
     @Test
-    @Disabled
+    @Disabled("Currently did should not get generated using HTTP API")
     void generateDidAndPrivateKeyBadRequest() throws Exception {
 
         mvc.perform(MockMvcRequestBuilders.post("/generateDidAndPrivateKey").contentType(MediaType.APPLICATION_JSON)

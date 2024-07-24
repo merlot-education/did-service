@@ -43,7 +43,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 @EnableConfigurationProperties
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class MessageQueueServiceTests {
+class MessageQueueServiceTests {
     @Autowired
     MessageQueueService messageQueueService;
 

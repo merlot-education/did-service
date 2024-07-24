@@ -22,19 +22,19 @@ import eu.merloteducation.didservice.models.exceptions.PemConversionException;
 import eu.merloteducation.didservice.models.exceptions.RequestArgumentException;
 import eu.merloteducation.modelslib.api.did.ParticipantDidPrivateKeyCreateRequest;
 import eu.merloteducation.modelslib.api.did.ParticipantDidPrivateKeyDto;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
+@Slf4j
 public class MessageQueueService {
+    private final DidService didService;
 
-    @Autowired
-    DidService didService;
-
-    private final Logger logger = LoggerFactory.getLogger(MessageQueueService.class);
+    public MessageQueueService(@Autowired DidService didService) {
+        this.didService = didService;
+    }
 
     /**
      * Listen for the event that a did:web and private key was requested on the message bus. Generates a did:web, a key
@@ -49,17 +49,17 @@ public class MessageQueueService {
     @RabbitListener(queues = MessageQueueConfig.DID_PRIVATE_KEY_REQUEST_QUEUE)
     public ParticipantDidPrivateKeyDto didPrivateKeyRequestedListener(ParticipantDidPrivateKeyCreateRequest request) {
 
-        logger.info("Did:web and private key requested for {}", request);
+        log.info("Did:web and private key requested for {}", request);
         try {
             return didService.generateDidAndPrivateKey(request);
         } catch (CryptographicAssetGenerationException e1) {
-            logger.error("Cryptographic asset creation failed: " + e1.getMessage());
+            log.error("Cryptographic asset creation failed: {}", e1.getMessage());
             return null;
         } catch (PemConversionException e2) {
-            logger.error("PEM conversion failed: " + e2.getMessage());
+            log.error("PEM conversion failed: {}", e2.getMessage());
             return null;
         } catch (RequestArgumentException e3) {
-            logger.error("Invalid request arguments:" + e3.getMessage());
+            log.error("Invalid request arguments: {}", e3.getMessage());
             return null;
         }
     }

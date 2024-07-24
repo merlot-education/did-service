@@ -18,8 +18,6 @@ package eu.merloteducation.didservice.controller;
 
 import eu.merloteducation.didservice.models.exceptions.*;
 import eu.merloteducation.didservice.service.DidService;
-import eu.merloteducation.modelslib.api.did.ParticipantDidPrivateKeyCreateRequest;
-import eu.merloteducation.modelslib.api.did.ParticipantDidPrivateKeyDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -35,8 +33,11 @@ import static org.springframework.http.HttpStatus.*;
 @RestController
 @RequestMapping("/")
 public class DidController {
-    @Autowired
-    private DidService didService;
+    private final DidService didService;
+
+    public DidController(@Autowired DidService didService) {
+        this.didService = didService;
+    }
 
     /**
      * GET endpoint for retrieving the DID document for given participant.

@@ -55,7 +55,7 @@ import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @EnableConfigurationProperties
-public class DidServiceTests {
+class DidServiceTests {
     @Value("${did-domain}")
     private String didDomain;
 
