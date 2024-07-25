@@ -57,8 +57,8 @@ Afterward you can build the service with
     mvn clean package
 
 ## Run
-
-    java -jar target/did-service-X.Y.Z.jar
+    # note that sudo is needed on most systems to bind to the port 443 for https
+    sudo java -jar target/did-service-X.Y.Z.jar
 
 ## Deploy (Docker)
 
