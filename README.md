@@ -3,7 +3,7 @@ The DID service is a microservice in the MERLOT marketplace which handles:
 - Provision of a new did:web and a new key pair that can be used for signing and verification.
   - The service manages the did:web along with a generated certificate containing the public key.
 - Provision of the DID document for a did:web that the service manages.
-  - Currently, the DID document lists one verification method that refers to the generated private key.
+  - Currently, the DID document lists one verification method that refers to the generated private key (as well as optionally a second method for a common public key).
 - Provision of the certificate associated with a did:web that the service manages.
 
 At the moment, the DID service handles only did:web!
@@ -55,6 +55,21 @@ Then set up your ~/.m2/settings.xml file as follows:
 Afterward you can build the service with
 
     mvn clean package
+
+## Configuration
+
+For a full list of configuration options (including Spring/JPA options) please see the 
+[application.yml](src/main/resources/application.yml).
+
+| Key                                | Description                                                                                                                              | Default |
+|------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|-------|
+| server.port                        | Sets the https port under which the service will run                                                                                     | 443   |
+| did-domain                         | Domain of the server hosting this DID-Service, used to reference it in the did documents                                                 |   localhost    |
+| certificate-issuer                 | Issuer that will be set in the self-generated certificates                                                                               |  MERLOT Federation     |
+| merlot-cert-path                   | (optional) path to a certificate that should be listed in all generated did documents (e.g. for a common public key within a federation) ||
+| merlot-verification-method-enabled | flag to use the above mentioned common certificate in the did documents                                                                  | false |
+
+
 
 ## Run
     # note that sudo is needed on most systems to bind to the port 443 for https

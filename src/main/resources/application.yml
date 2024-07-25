@@ -83,4 +83,4 @@ cors:
 certificate-issuer: "MERLOT Federation"
 
 merlot-cert-path: ""
-merlot-verification-method-enabled: true
+merlot-verification-method-enabled: false
