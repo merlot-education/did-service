@@ -28,3 +28,5 @@ server:
     enabled: false # will be set by cluster
   http:
     port: 0 # disable other ports
+
+merlot-verification-method-enabled: true
